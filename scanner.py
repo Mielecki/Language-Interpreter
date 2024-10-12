@@ -55,7 +55,10 @@ class Scanner(Lexer):
         t.value = int(t.value)
         return t
     
-    STRING = r'(".+")|(\'.+\')'
+    @_(r'(".+")|(\'.+\')')
+    def STRING(self, t):
+        t.value = str(t.value[1:-1])
+        return t
 
     @_(r'\n+')
     def ignore_newline(self, t):
