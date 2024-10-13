@@ -3,7 +3,7 @@ from sly import Lexer
 
 
 class Scanner(Lexer):
-    tokens = {DOTADD, DOTSUB, DOTMUL, DOTDIV,
+    tokens = {DOTADD, DOTSUB, DOTMUL, DOTDIV, 
               ADDASSIGN, SUBASSIGN, MULASSIGN, DIVASSIGN,
               LT, LE, GT, GE, NE, EQ,
               ID,
@@ -55,7 +55,7 @@ class Scanner(Lexer):
         t.value = int(t.value)
         return t
     
-    @_(r'(".+")|(\'.+\')')
+    @_(r'".*"')
     def STRING(self, t):
         t.value = str(t.value[1:-1])
         return t
