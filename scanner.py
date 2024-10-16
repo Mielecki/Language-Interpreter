@@ -45,7 +45,7 @@ class Scanner(Lexer):
     ID['zeros'] = ZEROS
     ID['ones'] = ONES
     
-    @_(r'((\d+\.\d*)|(\.\d+))(([eE][-]?\d+))?')
+    @_(r'(\d+\.\d*|\.\d+)([eE][-]?\d+)?')
     def FLOATNUM(self, t):
         t.value = float(t.value)
         return t
