@@ -45,7 +45,7 @@ class Scanner(Lexer):
     ID['zeros'] = ZEROS
     ID['ones'] = ONES
     
-    @_(r'(\d+\.\d*|\.\d+)([eE][-]?\d+)?')
+    @_(r'((\d+\.\d*|\.\d+)([eE][+-]?\d+)?)|(\d+[eE][+-]?\d+)')
     def FLOATNUM(self, t):
         t.value = float(t.value)
         return t
@@ -55,7 +55,7 @@ class Scanner(Lexer):
         t.value = int(t.value)
         return t
     
-    @_(r'".*"')
+    @_(r'".*?"')
     def STRING(self, t):
         t.value = str(t.value[1:-1])
         return t
@@ -66,7 +66,8 @@ class Scanner(Lexer):
 
 
     def error(self, t):
-        raise Exception(f"({t.lineno}): Illegal character '{t.value[0]}'")
+        print(f"({t.lineno}): Illegal character '{t.value[0]}'")
+        self.index += 1
 
 if __name__ == '__main__':
 
