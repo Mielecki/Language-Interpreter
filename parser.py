@@ -17,26 +17,24 @@ class Mparser(Parser):
     )
 
 
-    @_('instructions_opt')
-    def p_program(p):
+    @_('expr "+" expr')
+    def expr(self, p):
+        return p[0] + p[2]
+    
+    @_('expr "-" expr')
+    def expr(self, p):
+        return p[0] + p[2]
+    
+    @_('expr "*" expr')
+    def expr(self, p):
+        return p[0] + p[2]
+
+    @_('expr "/" expr')
+    def expr(self, p):
+        return p[0] + p[2]
+
+    # tylko do testów
+    @_('INTNUM')
+    def expr(self, p):
         pass
-
-    @_('instructions')
-    def p_instructions_opt(p):
-        pass
-
-    @_('')
-    def p_instructions_opt(p):
-        pass
-
-    @_('instructions instruction')
-    def p_instructions(p):
-        pass
-
-    @_('instruction')
-    def p_instructions(p):
-        pass
-
-
-    # to finish the grammar
-    # ....
+    

@@ -1,0 +1,239 @@
+Grammar:
+
+Rule 0     S' -> expr
+Rule 1     expr -> INTNUM
+Rule 2     expr -> expr / expr
+Rule 3     expr -> expr * expr
+Rule 4     expr -> expr - expr  [precedence=left, level=1]
+Rule 5     expr -> expr + expr  [precedence=left, level=1]
+
+Unused terminals:
+
+    FLOATNUM
+    PRINT
+    STRING
+    FOR
+    ID
+    ZEROS
+    NE
+    RETURN
+    DOTDIV
+    BREAK
+    CONTINUE
+    MULASSIGN
+    EYE
+    DOTMUL
+    DOTSUB
+    DIVASSIGN
+    ONES
+    SUBASSIGN
+    EQ
+    GT
+    ADDASSIGN
+    GE
+    IF
+    DOTADD
+    LE
+    LT
+    ELSE
+    WHILE
+
+Terminals, with rules where they appear:
+
+*                    : 3
++                    : 5
+-                    : 4
+/                    : 2
+ADDASSIGN            : 
+BREAK                : 
+CONTINUE             : 
+DIVASSIGN            : 
+DOTADD               : 
+DOTDIV               : 
+DOTMUL               : 
+DOTSUB               : 
+ELSE                 : 
+EQ                   : 
+EYE                  : 
+FLOATNUM             : 
+FOR                  : 
+GE                   : 
+GT                   : 
+ID                   : 
+IF                   : 
+INTNUM               : 1
+LE                   : 
+LT                   : 
+MULASSIGN            : 
+NE                   : 
+ONES                 : 
+PRINT                : 
+RETURN               : 
+STRING               : 
+SUBASSIGN            : 
+WHILE                : 
+ZEROS                : 
+error                : 
+
+Nonterminals, with rules where they appear:
+
+expr                 : 2 2 3 3 4 4 5 5 0
+
+
+state 0
+
+    (0) S' -> . expr
+    (1) expr -> . INTNUM
+    (2) expr -> . expr / expr
+    (3) expr -> . expr * expr
+    (4) expr -> . expr - expr
+    (5) expr -> . expr + expr
+    INTNUM          shift and go to state 2
+
+    expr                           shift and go to state 1
+
+state 1
+
+    (0) S' -> expr .
+    (2) expr -> expr . / expr
+    (3) expr -> expr . * expr
+    (4) expr -> expr . - expr
+    (5) expr -> expr . + expr
+    /               shift and go to state 3
+    *               shift and go to state 4
+    -               shift and go to state 5
+    +               shift and go to state 6
+
+
+state 2
+
+    (1) expr -> INTNUM .
+    /               reduce using rule 1 (expr -> INTNUM .)
+    *               reduce using rule 1 (expr -> INTNUM .)
+    -               reduce using rule 1 (expr -> INTNUM .)
+    +               reduce using rule 1 (expr -> INTNUM .)
+    $end            reduce using rule 1 (expr -> INTNUM .)
+
+
+state 3
+
+    (2) expr -> expr / . expr
+    (1) expr -> . INTNUM
+    (2) expr -> . expr / expr
+    (3) expr -> . expr * expr
+    (4) expr -> . expr - expr
+    (5) expr -> . expr + expr
+    INTNUM          shift and go to state 2
+
+    expr                           shift and go to state 7
+
+state 4
+
+    (3) expr -> expr * . expr
+    (1) expr -> . INTNUM
+    (2) expr -> . expr / expr
+    (3) expr -> . expr * expr
+    (4) expr -> . expr - expr
+    (5) expr -> . expr + expr
+    INTNUM          shift and go to state 2
+
+    expr                           shift and go to state 8
+
+state 5
+
+    (4) expr -> expr - . expr
+    (1) expr -> . INTNUM
+    (2) expr -> . expr / expr
+    (3) expr -> . expr * expr
+    (4) expr -> . expr - expr
+    (5) expr -> . expr + expr
+    INTNUM          shift and go to state 2
+
+    expr                           shift and go to state 9
+
+state 6
+
+    (5) expr -> expr + . expr
+    (1) expr -> . INTNUM
+    (2) expr -> . expr / expr
+    (3) expr -> . expr * expr
+    (4) expr -> . expr - expr
+    (5) expr -> . expr + expr
+    INTNUM          shift and go to state 2
+
+    expr                           shift and go to state 10
+
+state 7
+
+    (2) expr -> expr / expr .
+    (2) expr -> expr . / expr
+    (3) expr -> expr . * expr
+    (4) expr -> expr . - expr
+    (5) expr -> expr . + expr
+  ! shift/reduce conflict for / resolved as shift
+  ! shift/reduce conflict for * resolved as shift
+  ! shift/reduce conflict for - resolved as shift
+  ! shift/reduce conflict for + resolved as shift
+    $end            reduce using rule 2 (expr -> expr / expr .)
+    /               shift and go to state 3
+    *               shift and go to state 4
+    -               shift and go to state 5
+    +               shift and go to state 6
+
+
+state 8
+
+    (3) expr -> expr * expr .
+    (2) expr -> expr . / expr
+    (3) expr -> expr . * expr
+    (4) expr -> expr . - expr
+    (5) expr -> expr . + expr
+  ! shift/reduce conflict for / resolved as shift
+  ! shift/reduce conflict for * resolved as shift
+  ! shift/reduce conflict for - resolved as shift
+  ! shift/reduce conflict for + resolved as shift
+    $end            reduce using rule 3 (expr -> expr * expr .)
+    /               shift and go to state 3
+    *               shift and go to state 4
+    -               shift and go to state 5
+    +               shift and go to state 6
+
+
+state 9
+
+    (4) expr -> expr - expr .
+    (2) expr -> expr . / expr
+    (3) expr -> expr . * expr
+    (4) expr -> expr . - expr
+    (5) expr -> expr . + expr
+    /               reduce using rule 4 (expr -> expr - expr .)
+    *               reduce using rule 4 (expr -> expr - expr .)
+    -               reduce using rule 4 (expr -> expr - expr .)
+    +               reduce using rule 4 (expr -> expr - expr .)
+    $end            reduce using rule 4 (expr -> expr - expr .)
+
+
+state 10
+
+    (5) expr -> expr + expr .
+    (2) expr -> expr . / expr
+    (3) expr -> expr . * expr
+    (4) expr -> expr . - expr
+    (5) expr -> expr . + expr
+    /               reduce using rule 5 (expr -> expr + expr .)
+    *               reduce using rule 5 (expr -> expr + expr .)
+    -               reduce using rule 5 (expr -> expr + expr .)
+    +               reduce using rule 5 (expr -> expr + expr .)
+    $end            reduce using rule 5 (expr -> expr + expr .)
+
+
+Conflicts:
+
+shift/reduce conflict for / in state 7 resolved as shift
+shift/reduce conflict for * in state 7 resolved as shift
+shift/reduce conflict for - in state 7 resolved as shift
+shift/reduce conflict for + in state 7 resolved as shift
+shift/reduce conflict for / in state 8 resolved as shift
+shift/reduce conflict for * in state 8 resolved as shift
+shift/reduce conflict for - in state 8 resolved as shift
+shift/reduce conflict for + in state 8 resolved as shift
