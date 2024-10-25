@@ -66,8 +66,7 @@ class Scanner(Lexer):
 
 
     def error(self, t):
-        print(f"({t.lineno}): Illegal character '{t.value[0]}'")
-        self.index += 1
+        raise Exception(f"({t.lineno}): Illegal character '{t.value[0]}'")
 
 if __name__ == '__main__':
 
