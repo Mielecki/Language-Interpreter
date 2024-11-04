@@ -13,6 +13,7 @@ class Mparser(Parser):
     precedence = (
         ('nonassoc', 'IFX'),
         ('nonassoc', 'ELSE'),
+        ('nonassoc', 'LT', 'GT', 'GE', 'LE', 'EQ', 'NE'),
         ("left", '+', '-'),
         ("left", "DOTADD", "DOTSUB"),
         ("left", '*', '/'),
@@ -122,7 +123,7 @@ class Mparser(Parser):
         pass
 
     # przypisanie
-    @_('ID assign_op expr', # np. A = 3 + 2
+    @_('ID assign_op expr', # np. A += 3 + 2
        'matrix_init assign_op expr', # inicjalizacja macierzy konkretnymi wartościami np. A[1,3] = 0
        'vector_init assign_op expr') # inicjalizacja wektora konkretnymi wartościami np. A[3] = 0
     def assignment(self, p):
