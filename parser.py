@@ -22,6 +22,10 @@ class Mparser(Parser):
         ('left', "'")
     )
 
+    def error(self, p):
+        if p:
+            print(p)
+            print(f"Syntax error at line {p.lineno}")
 
     @_('instructions_opt')
     def program(self, p):
@@ -65,7 +69,7 @@ class Mparser(Parser):
         pass
 
 
-    @_('expr "\'"') # np. A'
+    @_('expr "\'"')
     def transposition(self, p):
         pass
 
