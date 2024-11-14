@@ -1,6 +1,6 @@
 from sly import Parser
 from scanner import Scanner
-
+import AST
 
 
 class Mparser(Parser):
@@ -28,17 +28,19 @@ class Mparser(Parser):
 
     @_('instructions_opt')
     def program(self, p):
-        pass
+        return p[0]
 
     @_('instructions',
        '')
     def instructions_opt(self, p):
-        pass
+        return p[0]
 
     @_('instructions instruction',
        'instruction')
     def instructions(self, p):
-        pass
+        if len(p) == 1:
+            return AST.Instructions([p[0]])
+        return AST.Instructions(p[0].instructions + [p[1]])
 
 
     @_('expr "+" expr',
@@ -50,7 +52,7 @@ class Mparser(Parser):
        'expr DOTMUL expr',
        'expr DOTDIV expr',)
     def expr(self, p):
-        pass
+        return AST.BinExpr(p[1], p[0], p[2])
 
 
     @_('expr LT expr',
@@ -60,93 +62,129 @@ class Mparser(Parser):
        'expr EQ expr',
        'expr NE expr',)
     def condition(self, p):
-        pass
+        return AST.Condition(p[1], p[0], p[2])
 
 
     @_('"-" expr %prec UMINUS')
     def uminus(self, p):
-        pass
+        return AST.Uminus(p[1])
 
 
     @_('expr "\'"')
     def transposition(self, p):
-        pass
+        return AST.Transposition(p[0])
 
 
     @_('"[" vectors "]"') 
     def matrix(self, p):
-        pass
+        return p[1]
 
 
     @_('vectors "," vector',
        'vector')
     def vectors(self, p):
-        pass
+        if len(p) == 1:
+            return AST.Matrix([p[0]])
+        return AST.Matrix(p[0].matrix + [p[2]])
     
 
     @_('"[" elements "]"') 
     def vector(self, p):
-        pass
+        return p[1]
 
 
     @_('elements "," element',
        'element')
     def elements(self, p):
-        pass
+        if len(p) == 1:
+            return AST.Vector([p[0]])
+        return AST.Vector(p[0].vector+[p[2]])
     
 
     @_('ID',
        'number',) 
     def element(self, p):
-        pass
+        return p[0]
 
 
     @_('INTNUM',
        'FLOATNUM') 
     def number(self, p):
-        pass
+        return AST.Number(p[0])
 
 
     @_('ID "[" INTNUM "," INTNUM "]"')
     def matrix_init(self, p):
-        pass
+        return AST.MatrixInit(p[0], p[2], p[4])
     
 
     @_('ID "[" INTNUM "]"') 
     def vector_init(self, p):
-        pass
+         return AST.VectorInit(p[0], p[2])
 
 
     @_('EYE "(" INTNUM ")"',
        'ONES "(" INTNUM ")"', 
        'ZEROS "(" INTNUM ")"') 
     def matrix_function(self, p):
-        pass
+        return AST.MatrixFunction(p[0], p[2])
 
-    @_('ID assign_op expr', 
+    @_('var assign_op expr', 
        'matrix_init assign_op expr', 
        'vector_init assign_op expr') 
     def assignment(self, p):
-        pass
+        return AST.Assignment(p[1], p[0], p[2])
     
+    @_('ID')
+    def var(self, p):
+        return AST.Var(p[0])
+    
+    @_('IF "(" condition ")" instruction %prec IFX')
+    def instruction(self, p):
+        return AST.If(p[2], p[4])
 
-    @_('IF "(" condition ")" instruction %prec IFX', 
-       'IF "(" condition ")" instruction ELSE instruction',
-       'WHILE "(" condition ")" instruction',     
-       'FOR ID "=" expr ":" expr instruction',
-       '"{" instructions "}"', 
+    @_('IF "(" condition ")" instruction ELSE instruction')
+    def instruction(self, p):
+        return AST.Ifelse(p[2], p[4], p[6])
+
+    @_('WHILE "(" condition ")" instruction')
+    def instruction(self, p):
+        return AST.While(p[2], p[4])
+        
+    @_('FOR var "=" range instruction')
+    def instruction(self, p):
+        return AST.For(p[1], p[3], p[4])
+
+    @_('expr ":" expr')
+    def range(self, p):
+        return AST.Range(p[0], p[2])
+
+    @_('"{" instructions "}"', 
        'instruction_end ";"')
     def instruction(self, p):
-        pass
+        if len(p) == 2:
+            return p[0]
+        return p[1]
 
-
-    @_('assignment',
-       'RETURN expr',
-       'BREAK',
-       'CONTINUE',
-       'PRINT to_print')
+    @_('BREAK')
     def instruction_end(self, p):
-        pass
+        return AST.Break()
+    
+    @_('CONTINUE')
+    def instruction_end(self, p):
+        return AST.Continue()
+
+    @_('RETURN expr')
+    def instruction_end(self, p):
+        return AST.Return(p[1])
+
+    @_('PRINT to_print')
+    def instruction_end(self, p):
+        return AST.Print(p[1])
+
+    @_('assignment')
+    def instruction_end(self, p):
+        return p[0]
 
 
     @_('=',
@@ -155,21 +193,23 @@ class Mparser(Parser):
        'MULASSIGN',
        'DIVASSIGN')
     def assign_op(self,p):
-        pass
+        return p[0]
 
     @_('STRING',
        'expr',
        'expr "," to_print', 
        'STRING "," to_print') 
     def to_print(self, p):
-        pass
+        if len(p) == 1:
+            return AST.ToPrint([p[0]])
+        return AST.ToPrint([p[0], p[2]])
 
 
-    @_('ID',
+    @_('var',
        'uminus',
        'matrix',
        'transposition',
        'matrix_function',
        'number')
     def expr(self, p):
-        pass
+        return p[0]
