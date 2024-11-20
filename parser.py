@@ -195,14 +195,18 @@ class Mparser(Parser):
     def assign_op(self,p):
         return p[0]
 
-    @_('STRING',
+    @_('string',
        'expr',
        'expr "," to_print', 
-       'STRING "," to_print') 
+       'string "," to_print') 
     def to_print(self, p):
         if len(p) == 1:
             return AST.ToPrint([p[0]])
-        return AST.ToPrint([p[0], p[2]])
+        return AST.ToPrint([p[0]] + p[2].values)
+    
+    @_('STRING')
+    def string(self, p):
+        return AST.String(p[0])
 
 
     @_('var',

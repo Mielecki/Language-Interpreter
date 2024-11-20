@@ -47,6 +47,10 @@ class TreePrinter:
     def printTree(self, indent=0):
         print(TreePrinter.indent(indent) + self.name)
 
+    @addToClass(AST.String)
+    def printTree(self, indent=0):
+        print(TreePrinter.indent(indent) + self.string)
+
     @addToClass(AST.If)
     def printTree(self, indent=0):
         print(TreePrinter.indent(indent) + "IF")
@@ -144,3 +148,8 @@ class TreePrinter:
     def printTree(self, indent=0):
         for val in self.values:
             val.printTree(indent)
+
+    @addToClass(AST.Return)
+    def printTree(self, indent=0):
+        print(TreePrinter.indent(indent) + "RETURN")
+        self.expr.printTree(indent + 1)

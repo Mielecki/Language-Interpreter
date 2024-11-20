@@ -31,6 +31,10 @@ class Var(Node):
     name: Any
 
 @dataclass
+class String(Node):
+    string: Any
+
+@dataclass
 class If(Node):
     cond: Any
     instr: Any
