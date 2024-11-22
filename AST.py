@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, List
 
 class Node(object):
@@ -102,16 +102,10 @@ class Number(Node):
 
 
 @dataclass
-class MatrixInit(Node):
+class MatrixRef(Node):
     id: Any
     row_index: Any
     col_index: Any
-
-@dataclass
-class VectorInit(Node):
-    id: Any
-    index: Any
-
 
 @dataclass
 class MatrixFunction(Node):

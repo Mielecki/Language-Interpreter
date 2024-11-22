@@ -9,11 +9,11 @@ class Mparser(Parser):
 
     debugfile = 'parser.out'
 
+    valid = True
 
     precedence = (
         ('nonassoc', 'IFX'),
         ('nonassoc', 'ELSE'),
-        ('nonassoc', 'LT', 'GT', 'GE', 'LE', 'EQ', 'NE'),
         ("left", '+', '-'),
         ("left", "DOTADD", "DOTSUB"),
         ("left", '*', '/'),
@@ -23,6 +23,7 @@ class Mparser(Parser):
     )
 
     def error(self, p):
+        self.valid = False
         if p:
             print(f"Syntax error at line {p.lineno}")
 
@@ -35,13 +36,13 @@ class Mparser(Parser):
     def instructions_opt(self, p):
         return p[0]
 
-    @_('instructions instruction',
-       'instruction')
+    @_('instructions instruction')
     def instructions(self, p):
-        if len(p) == 1:
-            return AST.Instructions([p[0]])
         return AST.Instructions(p[0].instructions + [p[1]])
-
+    
+    @_('instruction')
+    def instructions(self, p):
+        return AST.Instructions([p[0]])
 
     @_('expr "+" expr',
        'expr "-" expr',
@@ -80,26 +81,26 @@ class Mparser(Parser):
         return p[1]
 
 
-    @_('vectors "," vector',
-       'vector')
+    @_('vectors "," vector')
     def vectors(self, p):
-        if len(p) == 1:
-            return AST.Matrix([p[0]])
         return AST.Matrix(p[0].matrix + [p[2]])
     
-
+    @_('vector')
+    def vectors(self, p):
+        return AST.Matrix([p[0]])
+    
     @_('"[" elements "]"') 
     def vector(self, p):
         return p[1]
 
 
-    @_('elements "," element',
-       'element')
+    @_('elements "," element')
     def elements(self, p):
-        if len(p) == 1:
-            return AST.Vector([p[0]])
         return AST.Vector(p[0].vector+[p[2]])
     
+    @_('element')
+    def elements(self, p):
+        return AST.Vector([p[0]])
 
     @_('ID',
        'number',) 
@@ -114,14 +115,8 @@ class Mparser(Parser):
 
 
     @_('ID "[" INTNUM "," INTNUM "]"')
-    def matrix_init(self, p):
-        return AST.MatrixInit(p[0], p[2], p[4])
-    
-
-    @_('ID "[" INTNUM "]"') 
-    def vector_init(self, p):
-         return AST.VectorInit(p[0], p[2])
-
+    def matrix_ref(self, p):
+        return AST.MatrixRef(p[0], p[2], p[4])
 
     @_('EYE "(" INTNUM ")"',
        'ONES "(" INTNUM ")"', 
@@ -130,8 +125,7 @@ class Mparser(Parser):
         return AST.MatrixFunction(p[0], p[2])
 
     @_('var assign_op expr', 
-       'matrix_init assign_op expr', 
-       'vector_init assign_op expr') 
+       'matrix_ref assign_op expr',) 
     def assignment(self, p):
         return AST.Assignment(p[1], p[0], p[2])
     
@@ -159,12 +153,13 @@ class Mparser(Parser):
     def range(self, p):
         return AST.Range(p[0], p[2])
 
-    @_('"{" instructions "}"', 
-       'instruction_end ";"')
+    @_('"{" instructions "}"')
     def instruction(self, p):
-        if len(p) == 2:
-            return p[0]
         return p[1]
+    
+    @_('instruction_end ";"')
+    def instruction(self, p):
+        return p[0]
 
     @_('BREAK')
     def instruction_end(self, p):
@@ -195,14 +190,15 @@ class Mparser(Parser):
     def assign_op(self,p):
         return p[0]
 
-    @_('string',
-       'expr',
-       'expr "," to_print', 
+    @_('expr "," to_print', 
        'string "," to_print') 
     def to_print(self, p):
-        if len(p) == 1:
-            return AST.ToPrint([p[0]])
         return AST.ToPrint([p[0]] + p[2].values)
+    
+    @_('string',
+       'expr')
+    def to_print(self, p):
+        return AST.ToPrint([p[0]])
     
     @_('STRING')
     def string(self, p):
