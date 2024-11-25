@@ -141,6 +141,12 @@ class Number(Node):
     def __post_init__(self):
         super().__init__()
 
+@dataclass
+class VectorRef(Node):
+    id: Any
+    index: Any
+    def __post_init__(self):
+        super().__init__()
 
 @dataclass
 class MatrixRef(Node):

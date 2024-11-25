@@ -117,6 +117,10 @@ class Mparser(Parser):
     @_('ID "[" INTNUM "," INTNUM "]"')
     def matrix_ref(self, p):
         return AST.MatrixRef(p[0], p[2], p[4])
+    
+    @_('ID "[" INTNUM "]"')
+    def vector_ref(self, p):
+        return AST.VectorRef(p[0], p[2])
 
     @_('EYE "(" INTNUM ")"',
        'ONES "(" INTNUM ")"', 
@@ -125,7 +129,8 @@ class Mparser(Parser):
         return AST.MatrixFunction(p[0], p[2])
 
     @_('var assign_op expr', 
-       'matrix_ref assign_op expr',) 
+       'matrix_ref assign_op expr',
+       'vector_ref assign_op expr',) 
     def assignment(self, p):
         return AST.Assignment(p[1], p[0], p[2])
     
@@ -208,6 +213,7 @@ class Mparser(Parser):
     @_('var',
        'uminus',
        'matrix',
+       'vector',
        'transposition',
        'matrix_function',
        'number')
