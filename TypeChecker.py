@@ -81,10 +81,9 @@ class TypeChecker(NodeVisitor):
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, None))
             return 
         else:
-            type_var = self.visit(node.var)
-            type_res = ttype[op][type_expr][type_var]
+            type_res = ttype[op][node.expr.type][node.var.type]
             if type_res == None:
-                self.new_error(f"Assignment error: Wrong types ({type_var}, {type_expr})")
+                self.new_error(f"Assignment error: Wrong types ({node.expr.type}, {node.var.type})")
                 return
             
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res))
@@ -147,3 +146,56 @@ class TypeChecker(NodeVisitor):
         node.size = node.left.size
         return
 
+    def visit_For(self, node):
+        self.visit(node.var)
+        self.visit(node.range)
+        self.symbol_table = self.symbol_table.pushScope("loop")
+        self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, "int", None))
+        self.visit(node.instr)
+        self.symbol_table = self.symbol_table.popScope()
+
+    def visit_Range(self, node):
+        self.visit(node.left)
+        self.visit(node.right)
+
+        if node.left.type != "int" or node.right.type != "int":
+            self.new_error(f"Range error: Wrong range types ({node.left.type}, {node.right.type})")
+
+    def visit_Print(self, node):
+        self.visit(node.to_print)
+
+    def visit_ToPrint(self, node):
+        self.visit(node.values)
+
+    def visit_While(self, node):
+        self.visit(node.cond)
+        self.symbol_table = self.symbol_table.pushScope("loop")
+        self.visit(node.instr)
+        self.symbol_table = self.symbol_table.popScope()
+
+    def visit_Condition(self, node):
+        self.visit(node.left)
+        self.visit(node.right)
+        op = node.op
+
+        type = ttype[op][node.left.type][node.right.type]
+        
+        if type is None or type != "boolean":
+            self.new_error(f"Condition error: Wrong condition types ({node.left.type}, {node.right.type})")
+            return
+        
+    def visit_Ifelse(self, node):
+        self.visit(node.cond)
+        self.symbol_table = self.symbol_table.pushScope("if")
+        self.visit(node.instr)
+        self.symbol_table = self.symbol_table.popScope()
+
+        self.symbol_table = self.symbol_table.pushScope("else")
+        self.visit(node.instr_else)
+        self.symbol_table = self.symbol_table.popScope()
+    
+    def visit_If(self, node):
+        self.visit(node.cond)
+        self.symbol_table = self.symbol_table.pushScope("if")
+        self.visit(node.instr)
+        self.symbol_table = self.symbol_table.popScope()
