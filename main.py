@@ -2,7 +2,7 @@ import sys
 from scanner import Scanner
 from parser import Mparser
 from TreePrinter import TreePrinter
-
+from TypeChecker import TypeChecker
 
 if __name__ == '__main__':
 
@@ -14,10 +14,12 @@ if __name__ == '__main__':
         sys.exit(0)
 
     text = file.read()
-    lexer = Scanner()
     parser = Mparser()
+    lexer = Scanner()
 
     ast = parser.parse(lexer.tokenize(text))
+
+    # Below code shows how to use visitor
+    typeChecker = TypeChecker()   
+    typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
     
-    if parser.valid:
-        ast.printTree()

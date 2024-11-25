@@ -102,7 +102,7 @@ class Mparser(Parser):
     def elements(self, p):
         return AST.Vector([p[0]])
 
-    @_('ID',
+    @_('var',
        'number',) 
     def element(self, p):
         return p[0]

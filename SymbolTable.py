@@ -4,8 +4,12 @@ class Symbol:
         self.type = type
 
 class VariableSymbol(Symbol):
-    def __init__(self, name, type):
-        super().__init__(name, type)
+    def __init__(self, name, type, size):
+        super().__init__(name, str(type))
+        self.size = size
+    
+    def __repr__(self):
+        return str(self.type)
 
 class FunctionDefinition(Symbol):
     def __init__(self, name, type, parameters):
@@ -23,17 +27,19 @@ class SymbolTable(object):
         self.symbols[name] = symbol
 
     def get(self, name): # get variable symbol or fundef from <name> entry
-        pass
-    #
+        symbol = self.symbols.get(name)
+        if symbol:
+            return symbol
+        elif self.parent:
+            return self.parent.get(name)
 
     def getParentScope(self):
         return self.parent
 
     def pushScope(self, name):
-        pass
-    #
+        return SymbolTable(self, name)
 
     def popScope(self):
-        pass
+        return self.parent
     #
 
