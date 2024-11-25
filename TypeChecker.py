@@ -16,6 +16,9 @@ for op in ['+', '-', '*', '/', '+=', '-=', '*=', '/=']:
     ttype[op]['int']['float'] = 'float'
     ttype[op]['float']['int'] = 'float'
     ttype[op]['matrix']['matrix'] = 'matrix'
+    ttype[op]['vector']['vector'] = 'vector'
+    ttype[op]['vector']['int'] = 'matrix'
+    ttype[op]['vector']['float'] = 'matrix'
 
 for op in ['.+', '.-', '.*', './']:
     ttype[op]['matrix']['matrix'] = 'matrix'
@@ -75,15 +78,18 @@ class TypeChecker(NodeVisitor):
         op = node.op
 
         if op == '=':
-            if node.expr.type == "matrix":
-                self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, "matrix", node.expr.size))
+            if node.expr.type in ("matrix", "vector"):
+                self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, node.expr.size))
                 return
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, None))
             return 
         else:
-            type_res = ttype[op][node.expr.type][node.var.type]
+            if node.var.type is None:
+                self.new_error(f"Assignment error: {node.var.name} is not initalized")
+                return
+            type_res = ttype[op][node.var.type][node.expr.type]
             if type_res == None:
-                self.new_error(f"Assignment error: Wrong types ({node.expr.type}, {node.var.type})")
+                self.new_error(f"Assignment error: Wrong types ({node.var.type}, {node.expr.type})")
                 return
             
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res))
@@ -112,7 +118,7 @@ class TypeChecker(NodeVisitor):
             self.new_error("Matrix error: All vectors must have the same size")
 
         node.type = "matrix"
-        node.size = (len(node.matrix), first_len)
+        node.size = (len(node.matrix), first_len[1])
         return
         
     def visit_Vector(self, node):
@@ -138,8 +144,8 @@ class TypeChecker(NodeVisitor):
             self.new_error(f"BinExpr error: Wrong types ({node.left.type}, {node.right.type})")
             return 
         
-        if type == "matrix" and node.left.size != node.right.size:
-            self.new_error(f"BinExpr error: Wrong matrix sizes")
+        if type in ("matrix", "vector") and node.left.size != node.right.size:
+            self.new_error(f"BinExpr error: Wrong matrix/vector sizes ({node.left.size}, {node.right.size})")
             return
 
         node.type = type
@@ -199,3 +205,13 @@ class TypeChecker(NodeVisitor):
         self.symbol_table = self.symbol_table.pushScope("if")
         self.visit(node.instr)
         self.symbol_table = self.symbol_table.popScope()
+
+    def visit_Transposition(self, node):
+        self.visit(node.matrix)
+
+        if node.matrix.type not in ("matrix", "vector"):
+            self.new_error("Transpositon error: only matrix or vector can be transposed")
+            return
+        
+        node.type = node.matrix.type
+        node.size = (node.matrix.size[1], node.matrix.size[0])
