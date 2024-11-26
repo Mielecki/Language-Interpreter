@@ -122,11 +122,17 @@ class Mparser(Parser):
     def vector_ref(self, p):
         return AST.VectorRef(p[0], p[2])
 
-    @_('EYE "(" INTNUM ")"',
-       'ONES "(" INTNUM ")"', 
-       'ZEROS "(" INTNUM ")"') 
+    @_('EYE "(" number ")"',
+       'ONES "(" number ")"', 
+       'ZEROS "(" number ")"') 
     def matrix_function(self, p):
-        return AST.MatrixFunction(p[0], p[2])
+        return AST.MatrixFunction(p[0], [p[2]])
+    
+    @_('EYE "(" number, number ")"',
+       'ONES "(" number, number ")"', 
+       'ZEROS "(" number, number ")"') 
+    def matrix_function(self, p):
+        return AST.MatrixFunction(p[0], [p[2], p[3]])
 
     @_('var assign_op expr', 
        'matrix_ref assign_op expr',

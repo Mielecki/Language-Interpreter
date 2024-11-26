@@ -159,7 +159,7 @@ class MatrixRef(Node):
 @dataclass
 class MatrixFunction(Node):
     name: Any
-    arg: Any
+    args: List[Any]
     def __post_init__(self):
         super().__init__()
 

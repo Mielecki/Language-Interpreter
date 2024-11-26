@@ -17,8 +17,6 @@ for op in ['+', '-', '*', '/', '+=', '-=', '*=', '/=']:
     ttype[op]['float']['int'] = 'float'
     ttype[op]['matrix']['matrix'] = 'matrix'
     ttype[op]['vector']['vector'] = 'vector'
-    ttype[op]['vector']['int'] = 'matrix'
-    ttype[op]['vector']['float'] = 'matrix'
 
 for op in ['.+', '.-', '.*', './']:
     ttype[op]['matrix']['matrix'] = 'matrix'
@@ -92,7 +90,7 @@ class TypeChecker(NodeVisitor):
                 self.new_error(f"Assignment error: Wrong types ({node.var.type}, {node.expr.type})")
                 return
             
-            self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res))
+            self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res, None))
 
             return type_res
 
@@ -215,3 +213,16 @@ class TypeChecker(NodeVisitor):
         
         node.type = node.matrix.type
         node.size = (node.matrix.size[1], node.matrix.size[0])
+
+    def visit_MatrixFunction(self, node):
+        self.visit(node.arg)
+
+        if node.arg.type != "int":
+            self.new_error(f"{node.name} error: argument must be of type int")
+            return
+
+        node.type = "matrix"
+        node.size = (int(node.arg.value), int(node.arg.value))
+
+
+    def visit_MatrixRef(self, node):

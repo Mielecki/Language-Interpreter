@@ -11,11 +11,6 @@ class VariableSymbol(Symbol):
     def __repr__(self):
         return str(self.type)
 
-class FunctionDefinition(Symbol):
-    def __init__(self, name, type, parameters):
-        super().__init__(name, type)
-        self.parameters = parameters
-
 class SymbolTable(object):
 
     def __init__(self, parent, name): # parent scope and symbol table name

@@ -22,4 +22,4 @@ if __name__ == '__main__':
     # Below code shows how to use visitor
     typeChecker = TypeChecker()   
     typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
-    
+    print(typeChecker.symbol_table.symbols)
