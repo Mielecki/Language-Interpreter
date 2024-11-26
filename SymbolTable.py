@@ -36,5 +36,11 @@ class SymbolTable(object):
 
     def popScope(self):
         return self.parent
-    #
+    
+    def checkLoop(self):
+        if self.name == "loop":
+            return True
+        if self.parent == None:
+            return False
+        return self.parent.checkLoop()
 

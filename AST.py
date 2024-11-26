@@ -1,174 +1,148 @@
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, List, Optional
 
 class Node(object):
-    def __init__(self):
-        self.type = None
-        self.size = None
+    type: Optional[Any] = None
+    size: Optional[Any] = None
 
 @dataclass
 class BinExpr(Node):
     op: Any
     left: Any
     right: Any
-
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Condition(Node):
     op: Any
     left: Any
     right: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Uminus(Node):
     right: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Assignment(Node):
     op: Any
     var: Any
     expr: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Var(Node):
     name: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class String(Node):
     string: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class If(Node):
     cond: Any
     instr: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Ifelse(Node):
     cond: Any
     instr: Any
     instr_else: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class While(Node):
     cond: Any
     instr: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class For(Node):
     var: Any
     range: Any
     instr: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Range(Node):
     left: Any
     right: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Break(Node):
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Continue(Node):
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Return(Node):
     expr: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Print(Node):
     to_print: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Instructions(Node):
     instructions: List[Any]
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 
 @dataclass
 class Transposition(Node):
     matrix: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class Matrix(Node):
     matrix: List[Any]
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 
 @dataclass
 class Vector(Node):
     vector: List[Any]
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
             
 @dataclass
 class Number(Node):
     value: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class VectorRef(Node):
     id: Any
     index: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class MatrixRef(Node):
     id: Any
     row_index: Any
     col_index: Any
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 @dataclass
 class MatrixFunction(Node):
     name: Any
     args: List[Any]
-    def __post_init__(self):
-        super().__init__()
+    line: Optional[int] = 0
 
 
 @dataclass
 class ToPrint(Node):
    values: List[Any]
-   def __post_init__(self):
-        super().__init__()
+   line: Optional[int] = 0
 
 
 @dataclass

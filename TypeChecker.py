@@ -24,6 +24,13 @@ for op in ['.+', '.-', '.*', './']:
     ttype[op]['matrix']['float'] = 'matrix'
     ttype[op]['int']['matrix'] = 'matrix'
     ttype[op]['float']['matrix'] = 'matrix'
+    ttype[op]['vector']['vector'] = 'vector'
+    ttype[op]['vector']['int'] = 'vector'
+    ttype[op]['vector']['float'] = 'vector'
+    ttype[op]['int']['vector'] = 'vector'
+    ttype[op]['float']['vector'] = 'vector'
+    ttype[op]['vector']['matrix'] = 'matrix'
+    ttype[op]['matrix']['vector'] = 'matrix'
 
 class NodeVisitor(object):
 
@@ -56,15 +63,9 @@ class NodeVisitor(object):
 class TypeChecker(NodeVisitor):
     def __init__(self):
         self.symbol_table = SymbolTable(None, "program")
-        self.errors = []
-
-    def print_errors(self):
-        for err in self.errors:
-            print(err)
     
-    def new_error(self, msg):
-        print(msg)
-        self.errors.append(msg)
+    def new_error(self, msg, line):
+        print(f"[{line}]: {msg}")
 
     def visit_Instructions(self, node):
         for instruction in node.instructions:
@@ -75,6 +76,12 @@ class TypeChecker(NodeVisitor):
         self.visit(node.var)
         op = node.op
 
+        if isinstance(node.var, AST.MatrixRef) or isinstance(node.var, AST.VectorRef):
+            if node.expr.type not in ("int", "float"):
+                self.new_error(f"Matrix/VectorRef error: wrong type ({node.expr.type})", node.line)
+                return
+            return
+
         if op == '=':
             if node.expr.type in ("matrix", "vector"):
                 self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, node.expr.size))
@@ -83,11 +90,11 @@ class TypeChecker(NodeVisitor):
             return 
         else:
             if node.var.type is None:
-                self.new_error(f"Assignment error: {node.var.name} is not initalized")
+                self.new_error(f"Assignment error: {node.var.name} is not initalized", node.line)
                 return
             type_res = ttype[op][node.var.type][node.expr.type]
             if type_res == None:
-                self.new_error(f"Assignment error: Wrong types ({node.var.type}, {node.expr.type})")
+                self.new_error(f"Assignment error: Wrong types ({node.var.type}, {node.expr.type})", node.line)
                 return
             
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res, None))
@@ -113,7 +120,7 @@ class TypeChecker(NodeVisitor):
 
         first_len = node.matrix[0].size
         if not all([vector.size == node.matrix[0].size for vector in node.matrix]):
-            self.new_error("Matrix error: All vectors must have the same size")
+            self.new_error("Matrix error: All vectors must have the same size", node.line)
 
         node.type = "matrix"
         node.size = (len(node.matrix), first_len[1])
@@ -122,11 +129,11 @@ class TypeChecker(NodeVisitor):
     def visit_Vector(self, node):
         self.visit(node.vector)
         if node.vector[0].type not in ("int", "float"):
-            self.new_error(f"Vector error: Wrong element type ({node.vector[0].type})")
+            self.new_error(f"Vector error: Wrong element type ({node.vector[0].type})", node.line)
             return
 
         if not all([element.type == node.vector[0].type for element in node.vector]):
-            self.new_error(f"Vector error: All elements must have the same type ({node.vector[0].type})")
+            self.new_error(f"Vector error: All elements must have the same type ({node.vector[0].type})", node.line)
             return
 
         node.type = "vector"
@@ -139,12 +146,16 @@ class TypeChecker(NodeVisitor):
         op    = node.op
         type = ttype[op][node.left.type][node.right.type]
         if type is None:
-            self.new_error(f"BinExpr error: Wrong types ({node.left.type}, {node.right.type})")
+            self.new_error(f"BinExpr error: Wrong types ({node.left.type}, {node.right.type})", node.line)
             return 
         
-        if type in ("matrix", "vector") and node.left.size != node.right.size:
-            self.new_error(f"BinExpr error: Wrong matrix/vector sizes ({node.left.size}, {node.right.size})")
-            return
+        if type in ("matrix", "vector"):
+            if node.left.type == node.right.type and node.left.size != node.right.size:
+                self.new_error(f"BinExpr error: Wrong matrix/vector sizes ({node.left.size}, {node.right.size})", node.line)
+                return
+            elif node.left.size[1] != node.right.size[1]:
+                self.new_error(f"BinExpr error: Wrong matrix/vector sizes ({node.left.size}, {node.right.size})", node.line)
+                return
 
         node.type = type
         node.size = node.left.size
@@ -163,13 +174,17 @@ class TypeChecker(NodeVisitor):
         self.visit(node.right)
 
         if node.left.type != "int" or node.right.type != "int":
-            self.new_error(f"Range error: Wrong range types ({node.left.type}, {node.right.type})")
+            self.new_error(f"Range error: Wrong range types ({node.left.type}, {node.right.type})", node.line)
 
     def visit_Print(self, node):
         self.visit(node.to_print)
 
     def visit_ToPrint(self, node):
         self.visit(node.values)
+        for val in node.values:
+            if val.type == None:
+                self.new_error("Return error: cannot return None type", node.line)
+                return
 
     def visit_While(self, node):
         self.visit(node.cond)
@@ -185,7 +200,7 @@ class TypeChecker(NodeVisitor):
         type = ttype[op][node.left.type][node.right.type]
         
         if type is None or type != "boolean":
-            self.new_error(f"Condition error: Wrong condition types ({node.left.type}, {node.right.type})")
+            self.new_error(f"Condition error: Wrong condition types ({node.left.type}, {node.right.type})", node.line)
             return
         
     def visit_Ifelse(self, node):
@@ -208,19 +223,111 @@ class TypeChecker(NodeVisitor):
         self.visit(node.matrix)
 
         if node.matrix.type not in ("matrix", "vector"):
-            self.new_error("Transpositon error: only matrix or vector can be transposed")
+            self.new_error("Transpositon error: only matrix or vector can be transposed", node.line)
             return
         
         node.type = node.matrix.type
         node.size = (node.matrix.size[1], node.matrix.size[0])
 
     def visit_MatrixFunction(self, node):
-        self.visit(node.arg)
+        self.visit(node.args)
 
-        if node.arg.type != "int":
-            self.new_error(f"{node.name} error: argument must be of type int")
+        if len(node.args) == 2:
+            if node.args[0].type != "int" or node.args[1].type != "int":
+                self.new_error(f"{node.name} error: argument must be of type int", node.line)
+                return
+
+            node.type = "matrix"
+            node.size = (int(node.args[0].value), int(node.args[1].value))
+        else:
+            if node.args[0].type != "int":
+                self.new_error(f"{node.name} error: argument must be of type int", node.line)
+                return
+
+            node.type = "matrix"
+            node.size = (int(node.args[0].value), int(node.args[0].value))
+
+    def visit_MatrixRef(self, node):
+        self.visit(node.row_index)
+        self.visit(node.col_index)
+        self.visit(node.id)
+
+        if node.id.type != "matrix":
+            self.new_error("Reference error", node.line)
+            return
+            
+
+        if isinstance(node.row_index, AST.Range):
+            if node.row_index.left.value < 0:
+                self.new_error("Matrix error: index out of range", node.line)
+                return
+            
+            if node.row_index.right.value > node.id.size[0]:
+                self.new_error("Matrix error: index out of range", node.line)
+                return
+        else:
+            if node.row_index.type != "int":
+                self.new_error("Matrix error: index must be of type int", node.line)
+                return
+
+            if node.row_index.value < 0 or node.row_index.value + 1 > node.id.size[0]:
+                self.new_error("Matrix error: index out of range", node.line)
+                return
+            
+        if isinstance(node.col_index, AST.Range):
+            if node.col_index.left.value < 0:
+                self.new_error("Matrix error: index out of range", node.line)
+                return
+            
+            if node.col_index.right.value > node.id.size[1]:
+                self.new_error("Matrix error: index out of range", node.line)
+                return
+        else:
+            if node.col_index.type != "int":
+                self.new_error("Matrix error: index must be of type int", node.line)
+                return
+
+            if node.col_index.value < 0 or node.col_index.value > node.id.size[1]:
+                self.new_error("Matrix error: index out of range", node.line)
+                return
+            
+    def visit_VectorRef(self, node):
+        self.visit(node.index)
+        self.visit(node.id)
+
+        if node.id.type != "vector":
+            self.new_error("Reference error", node.line)
             return
 
-        node.type = "matrix"
-        node.size = (int(node.arg.value), int(node.arg.value))
+        if isinstance(node.index, AST.Range):
+            if node.index.left.value < 0:
+                self.new_error("Vector error: index out of range", node.line)
+                return
+            
+            if node.index.right.value > node.id.size[1]:
+                self.new_error("Vector error: index out of range", node.line)
+                return
+        else:
+            if node.index.type != "int":
+                self.new_error("Vector error: index must be of type int", node.line)
+                return
 
+            if node.index.value < 0 or node.index.value > node.id.size[1]:
+                self.new_error("Vector error: index out of range", node.line)
+                return
+            
+    def visit_Break(self, node):
+        if not self.symbol_table.checkLoop():
+            self.new_error("Break error: break statement must be in a loop", node.line)
+            return
+    
+    def visit_Continue(self, node):
+        if not self.symbol_table.checkLoop():
+            self.new_error("Continue error: continue statement must be in a loop", node.line)
+            return
+        
+    def visit_Return(self, node):
+        self.visit(node.expr)
+        if node.expr.type == None:
+            self.new_error("Return error: cannot return None type", node.line)
+            return
