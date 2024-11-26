@@ -129,20 +129,20 @@ class TreePrinter:
     def printTree(self, indent=0):
         print(TreePrinter.indent(indent) + "REF")
         print(TreePrinter.indent(indent + 1) + self.id)
-        print(TreePrinter.indent(indent + 1) + str(self.row_index))
-        print(TreePrinter.indent(indent + 1) + str(self.col_index))
+        self.row_index.printTree(indent + 1)
+        self.col_index.printTree(indent + 1)
 
     @addToClass(AST.VectorRef)
     def printTree(self, indent=0):
         print(TreePrinter.indent(indent) + "REF")
         print(TreePrinter.indent(indent + 1) + self.id)
-        print(TreePrinter.indent(indent + 1) + str(self.index))
+        self.index.printTree(indent + 1)
 
     @addToClass(AST.MatrixFunction)
     def printTree(self, indent=0):
         print(TreePrinter.indent(indent) + self.name)
         for arg in self.args:
-            print(TreePrinter.indent(indent + 1) + str(arg))
+            arg.printTree(indent + 1)
 
     @addToClass(AST.ToPrint)
     def printTree(self, indent=0):

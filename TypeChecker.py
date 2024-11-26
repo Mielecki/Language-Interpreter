@@ -224,5 +224,3 @@ class TypeChecker(NodeVisitor):
         node.type = "matrix"
         node.size = (int(node.arg.value), int(node.arg.value))
 
-
-    def visit_MatrixRef(self, node):

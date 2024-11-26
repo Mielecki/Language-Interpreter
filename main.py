@@ -18,8 +18,8 @@ if __name__ == '__main__':
     lexer = Scanner()
 
     ast = parser.parse(lexer.tokenize(text))
-
+    ast.printTree(0)
     # Below code shows how to use visitor
-    typeChecker = TypeChecker()   
-    typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
-    print(typeChecker.symbol_table.symbols)
+    # typeChecker = TypeChecker()   
+    # typeChecker.visit(ast)   
+    # print(typeChecker.symbol_table.symbols)
