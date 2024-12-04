@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 class Node(object):
     type: Optional[Any] = None
     size: Optional[Any] = None
+    elem_type: Optional[Any] = None
 
 @dataclass
 class BinExpr(Node):

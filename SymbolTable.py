@@ -4,9 +4,10 @@ class Symbol:
         self.type = type
 
 class VariableSymbol(Symbol):
-    def __init__(self, name, type, size):
+    def __init__(self, name, type, size, elem_type):
         super().__init__(name, str(type))
         self.size = size
+        self.elem_type = elem_type
     
     def __repr__(self):
         return str(self.type)
