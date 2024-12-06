@@ -13,6 +13,7 @@ class VariableSymbol(Symbol):
         return str(self.type)
 
 class SymbolTable(object):
+    loop_counter = 0
 
     def __init__(self, parent, name): # parent scope and symbol table name
         self.parent = parent
@@ -33,15 +34,16 @@ class SymbolTable(object):
         return self.parent
 
     def pushScope(self, name):
+        if name == "loop":
+            SymbolTable.loop_counter += 1
+        
         return SymbolTable(self, name)
 
     def popScope(self):
+        if self.name == "loop":
+            SymbolTable.loop_counter -= 1
         return self.parent
     
     def checkLoop(self):
-        if self.name == "loop":
-            return True
-        if self.parent == None:
-            return False
-        return self.parent.checkLoop()
+        return SymbolTable.loop_counter > 0
 

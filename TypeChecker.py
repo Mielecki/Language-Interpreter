@@ -81,7 +81,7 @@ class TypeChecker(NodeVisitor):
             if node.expr.type in ("matrix", "vector"):
                 self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, node.expr.size, node.expr.elem_type))
                 return
-            if isinstance(node.expr, AST.VectorRef) or isinstance(node.expr, AST.VectorRef):
+            if isinstance(node.expr, AST.MatrixRef) or isinstance(node.expr, AST.VectorRef):
                 self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, None, None))
                 return
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, node.expr.type, None, None))
@@ -97,7 +97,7 @@ class TypeChecker(NodeVisitor):
             
             self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res, None))
 
-            return type_res
+            return
 
     def visit_Var(self, node):
         symbol = self.symbol_table.get(node.name)
@@ -233,7 +233,7 @@ class TypeChecker(NodeVisitor):
             self.new_error(f"Transpositon error: {node.matrix.type} cannot be transposed", node.line)
             return
         
-        node.type = node.matrix.type
+        node.type = "matrix"
         node.size = (node.matrix.size[1], node.matrix.size[0])
 
     def visit_MatrixFunction(self, node):
@@ -344,3 +344,11 @@ class TypeChecker(NodeVisitor):
         if node.expr.type == None:
             self.new_error("Return error: Cannot return an uninitialized variable", node.line)
             return
+        
+    def visit_Uminus(self, node):
+        self.visit(node.right)
+        if node.right.type not in ('int', 'float'):
+            self.new_error(f"Uminus error: wrong type {node.right.type}", node.line)
+            return
+        
+        node.type = node.right.type
