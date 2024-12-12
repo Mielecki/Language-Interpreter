@@ -6,6 +6,9 @@ class Node(object):
     size: Optional[Any] = None
     elem_type: Optional[Any] = None
 
+    def accept(self, visitor):
+        return visitor.visit(self)
+
 @dataclass
 class BinExpr(Node):
     op: Any

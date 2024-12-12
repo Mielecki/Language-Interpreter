@@ -3,6 +3,8 @@ from scanner import Scanner
 from parser import Mparser
 from TreePrinter import TreePrinter
 from TypeChecker import TypeChecker
+from Interpreter import Interpreter
+
 
 if __name__ == '__main__':
 
@@ -23,4 +25,5 @@ if __name__ == '__main__':
         # Below code shows how to use visitor
         typeChecker = TypeChecker()   
         typeChecker.visit(ast)
-        print(typeChecker.symbol_table.symbols)
+
+        ast.accept(Interpreter())
