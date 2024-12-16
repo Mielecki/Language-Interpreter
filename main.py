@@ -25,5 +25,6 @@ if __name__ == '__main__':
         # Below code shows how to use visitor
         typeChecker = TypeChecker()   
         typeChecker.visit(ast)
-
-        ast.accept(Interpreter())
+        i = Interpreter()
+        ast.accept(i)
+        print(i.memory.stack[0].memory)

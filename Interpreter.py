@@ -10,7 +10,12 @@ operators = {
     '-': lambda x, y: x - y,
     '*': lambda x, y: x * y,
     '/': lambda x, y: x / y,
-
+    '<': lambda x, y: x < y,
+    '<=': lambda x, y: x <= y,
+    '>': lambda x, y: x > y,
+    '>=': lambda x, y: x >= y,
+    '==': lambda x, y: x == y,
+    '!=': lambda x, y: x != y
 }
 
 sys.setrecursionlimit(10000)
@@ -49,11 +54,47 @@ class Interpreter(object):
             return int(node.value)
         else:
             return float(node.value)
+        
+    @when(AST.String)
+    def visit(self, node):
+        return str(node.string)
+        
+    @when(AST.Condition)
+    def visit(self, node):
+        return operators[node.op](node.left.accept(self), node.right.accept(self))
 
     @when(AST.While)
     def visit(self, node):
         r = None
         while node.cond.accept(self):
-            r = node.body.accept(self)
+            r = node.instr.accept(self)
         return r
 
+    @when(AST.Vector)
+    def visit(self, node):
+        vector = []
+        for item in node.vector:
+            vector.append(item.accept(self))
+        return vector
+    
+    @when(AST.Matrix)
+    def visit(self, node):
+        matrix = []
+        for item in node.matrix:
+            matrix.append(item.accept(self))
+        return matrix
+
+    @when(AST.Range)
+    def visit(self, node):
+        return range(node.left, node.right)
+    
+    @when(AST.If)
+    def visit(self, node):
+        if node.cond.accept(self):
+            return node.instr.accept(self)
+        
+    @when(AST.Ifelse)
+    def visit(self, node):
+        if node.cond.accept(self):
+            return node.instr.accept(self)
+        return node.instr_else.accept(self)

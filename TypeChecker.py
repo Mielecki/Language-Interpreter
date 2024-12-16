@@ -352,3 +352,6 @@ class TypeChecker(NodeVisitor):
             return
         
         node.type = node.right.type
+
+    def visit_String(self, node):
+        node.type = "String"
