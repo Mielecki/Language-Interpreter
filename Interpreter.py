@@ -15,7 +15,15 @@ operators = {
     '>': lambda x, y: x > y,
     '>=': lambda x, y: x >= y,
     '==': lambda x, y: x == y,
-    '!=': lambda x, y: x != y
+    '!=': lambda x, y: x != y,
+    '.+': lambda x, y: [[x[i][j] + y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
+    '.-': lambda x, y: [[x[i][j] - y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
+    '.*': lambda x, y: [[x[i][j] * y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
+    './': lambda x, y: [[x[i][j] / y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
+    "zeros": lambda x, y: [[0 for _ in range(y)] for _ in range(x)],
+    "ones": lambda x, y: [[1 for _ in range(y)] for _ in range(x)],
+    "eye": lambda x, y: [[0 if i != j else 1 for j in range(y)] for i in range(x)],
+    "'": lambda x: [[x[j][i] for j in range(len(x))] for i in range(len(x[0]))]
 }
 
 sys.setrecursionlimit(10000)
@@ -47,6 +55,22 @@ class Interpreter(object):
         if isinstance(node.var, AST.Var):
             if node.op == "=":
                 self.memory.insert(node.var.name, r1)
+            else:
+                r2 = node.var.accept(self)
+                op = node.op[0]
+                self.memory.set(node.var.name, operators[op](r2, r1))
+        elif isinstance(node.var, AST.MatrixRef):
+            matrix = node.var.id.accept(self)
+            row = node.var.row_index.accept(self)
+            col = node.var.col_index.accept(self)
+            matrix[row][col] = r1
+            self.memory.set(node.var.id.name, matrix)
+        elif isinstance(node.var, AST.VectorRef):
+            vector = node.var.id.accept(self)
+            index = node.var.index.accept(self)
+            vector[index] = r1
+            self.memory.set(node.var.id.name, vector)
+
     
     @when(AST.Number)
     def visit(self, node):
@@ -66,9 +90,15 @@ class Interpreter(object):
     @when(AST.While)
     def visit(self, node):
         r = None
+        self.memory.push(Memory("while"))
         while node.cond.accept(self):
-            r = node.instr.accept(self)
-        return r
+            try:
+                node.instr.accept(self)
+            except BreakException:
+                break
+            except ContinueException:
+                continue
+        self.memory.pop()
 
     @when(AST.Vector)
     def visit(self, node):
@@ -98,3 +128,57 @@ class Interpreter(object):
         if node.cond.accept(self):
             return node.instr.accept(self)
         return node.instr_else.accept(self)
+    
+    @when(AST.Var)
+    def visit(self, node):
+        return self.memory.get(node.name)
+    
+    @when(AST.Return)
+    def visit(self, node):
+        raise ReturnValueException(node.expr.accept(self))
+    
+    @when(AST.Continue)
+    def visit(self, node):
+        raise ContinueException()
+    
+    @when(AST.Break)
+    def visit(self, node):
+        raise BreakException()
+    
+    @when(AST.Print)
+    def visit(self, node):
+        node.to_print.accept(self)
+
+    @when(AST.ToPrint)
+    def visit(self, node):
+        for value in node.values:
+            print(value.accept(self))
+
+    @when(AST.MatrixFunction)
+    def visit(self, node):
+        args = node.args
+        if len(args) == 1:
+            arg = args[0].accept(self)
+            x, y = arg, arg
+        else:
+            x, y = args[0].accept(self), args[1].accept(self)
+        return operators[node.name](x, y)
+    
+    @when(AST.Transposition)
+    def visit(self, node):
+        return operators("'")(node.matrix.accept(self))
+    
+    @when(AST.MatrixRef)
+    def visit(self, node):
+        var = node.id.name
+        row = node.row_index.accept(self)
+        col = node.col_index.accept(self)
+
+        return self.memory.get(var)[row][col]
+    
+    @when(AST.VectorRef)
+    def visit(self, node):
+        var = node.id.name
+        index = node.index.accept(self)
+
+        return self.memory.get(var)[index]

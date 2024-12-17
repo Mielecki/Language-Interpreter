@@ -10,7 +10,7 @@ class Memory:
         return name in self.memory
 
     def get(self, name):         # gets from memory current value of variable <name>
-        return self.memory[name]
+        return self.memory.get(name)
 
     def put(self, name, value):  # puts into memory current value of variable <name>
         self.memory[name] = value
@@ -38,4 +38,9 @@ class MemoryStack:
         self.stack.append(memory)
 
     def pop(self):          # pops the top memory from the stack
+        for key in self.stack[-1].memory.keys():
+            for i in range(len(self.stack) - 2, -1, -1):
+                if self.stack[i].has_key(key):
+                    self.stack[i].put(key, self.stack[-1].get(key))
+                    break
         self.stack.pop()

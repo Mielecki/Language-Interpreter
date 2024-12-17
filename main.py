@@ -4,6 +4,7 @@ from parser import Mparser
 from TreePrinter import TreePrinter
 from TypeChecker import TypeChecker
 from Interpreter import Interpreter
+from Exceptions import ReturnValueException
 
 
 if __name__ == '__main__':
@@ -26,5 +27,9 @@ if __name__ == '__main__':
         typeChecker = TypeChecker()   
         typeChecker.visit(ast)
         i = Interpreter()
-        ast.accept(i)
-        print(i.memory.stack[0].memory)
+        try:
+            ast.accept(i)
+        except ReturnValueException as e:
+            print("Return value:", e.value)
+        
+        # print(i.memory.stack[0].memory)

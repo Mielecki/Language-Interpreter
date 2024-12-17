@@ -95,7 +95,7 @@ class TypeChecker(NodeVisitor):
                 self.new_error(f"Compound assignment error: Cannot assign {node.expr.type} type to {node.var.type} type", node.line)
                 return
             
-            self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res, None))
+            self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_res, None, None))
 
             return
 
