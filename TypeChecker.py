@@ -18,6 +18,10 @@ for op in ['+', '-', '*', '/', '+=', '-=', '*=', '/=']:
     ttype[op]['matrix']['matrix'] = 'matrix'
     ttype[op]['vector']['vector'] = 'vector'
 
+ttype['*']['string']['int'] = 'string'
+ttype['*']['int']['string'] = 'string'
+ttype['+']['string']['string'] = 'string'
+
 for op in ['.+', '.-', '.*', './']:
     ttype[op]['matrix']['matrix'] = 'matrix'
     ttype[op]['matrix']['int'] = 'matrix'
@@ -58,9 +62,14 @@ class NodeVisitor(object):
 class TypeChecker(NodeVisitor):
     def __init__(self):
         self.symbol_table = SymbolTable(None, "program")
-    
+        self.valid = True
+
     def new_error(self, msg, line):
+        self.valid = False
         print(f"[{line}]: {msg}")
+
+    def visit_Program(self, node):
+        self.visit(node.code)
 
     def visit_Instructions(self, node):
         for instruction in node.instructions:
@@ -134,6 +143,12 @@ class TypeChecker(NodeVisitor):
         
     def visit_Vector(self, node):
         self.visit(node.vector)
+        if len(node.vector) == 1 and node.vector[0].type == "vector":
+            node.type = "matrix"
+            node.size = node.vector[0].size
+            node.elem_type = node.vector[0].type
+            return
+
         if node.vector[0].type not in ("int", "float"):
             self.new_error(f"Vector error: Wrong element type ({node.vector[0].type})", node.line)
             return
@@ -149,7 +164,8 @@ class TypeChecker(NodeVisitor):
 
     def visit_BinExpr(self, node):
         self.visit(node.left)
-        self.visit(node.right)   
+        self.visit(node.right)
+
         op = node.op
         type = ttype[op][node.left.type][node.right.type]
         if type is None:
@@ -354,4 +370,4 @@ class TypeChecker(NodeVisitor):
         node.type = node.right.type
 
     def visit_String(self, node):
-        node.type = "String"
+        node.type = "string"

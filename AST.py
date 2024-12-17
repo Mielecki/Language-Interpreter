@@ -10,6 +10,11 @@ class Node(object):
         return visitor.visit(self)
 
 @dataclass
+class Program(Node):
+    code: Any
+    line: Optional[int] = 0
+
+@dataclass
 class BinExpr(Node):
     op: Any
     left: Any

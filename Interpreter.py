@@ -5,6 +5,7 @@ from Exceptions import  *
 from visit import *
 import sys
 
+# not all possible combinations were considered (e.g., matrix .+ vector, matrix .+ int)
 operators = {
     '+': lambda x, y: x + y,
     '-': lambda x, y: x - y,
@@ -35,7 +36,13 @@ class Interpreter(object):
     @on('node')
     def visit(self, node):
         pass
-
+    
+    @when(AST.Program)
+    def visit(self, node):
+        try:
+            node.code.accept(self)
+        except ReturnValueException as e:
+            print(e.value)
     
     @when(AST.Instructions)
     def visit(self, node):
@@ -63,11 +70,15 @@ class Interpreter(object):
             matrix = node.var.id.accept(self)
             row = node.var.row_index.accept(self)
             col = node.var.col_index.accept(self)
-            matrix[row][col] = r1
+            for i in row[:-1] if isinstance(node.var.row_index, AST.Range) else range(row):
+                for j in col[:-1] if isinstance(node.var.row_index, AST.Range) else range(col):
+                    matrix[i][j] = r1
             self.memory.set(node.var.id.name, matrix)
         elif isinstance(node.var, AST.VectorRef):
             vector = node.var.id.accept(self)
             index = node.var.index.accept(self)
+            for i in index[:-1] if isinstance(node.var.index, AST.Range) else range(index):
+                    index[i] = r1
             vector[index] = r1
             self.memory.set(node.var.id.name, vector)
 
@@ -89,7 +100,6 @@ class Interpreter(object):
 
     @when(AST.While)
     def visit(self, node):
-        r = None
         self.memory.push(Memory("while"))
         while node.cond.accept(self):
             try:
@@ -98,6 +108,25 @@ class Interpreter(object):
                 break
             except ContinueException:
                 continue
+        self.memory.pop()
+
+    @when(AST.For)
+    def visit(self, node):
+        r = node.range.accept(self)
+        self.memory.push(Memory("for"))
+
+        i = node.var.name
+        self.memory.insert(i, r[0])
+        
+        while self.memory.get(i) in r:
+            try:
+                node.instr.accept(self)
+            except BreakException:
+                break
+            except ContinueException:
+                continue
+            finally:
+                self.memory.set(i, self.memory.get(i) + 1)
         self.memory.pop()
 
     @when(AST.Vector)
@@ -116,8 +145,8 @@ class Interpreter(object):
 
     @when(AST.Range)
     def visit(self, node):
-        return range(node.left, node.right)
-    
+        return range(node.left.accept(self), node.right.accept(self) + 1)
+
     @when(AST.If)
     def visit(self, node):
         if node.cond.accept(self):
@@ -166,19 +195,47 @@ class Interpreter(object):
     
     @when(AST.Transposition)
     def visit(self, node):
-        return operators("'")(node.matrix.accept(self))
+        return operators["'"](node.matrix.accept(self))
     
     @when(AST.MatrixRef)
     def visit(self, node):
         var = node.id.name
         row = node.row_index.accept(self)
         col = node.col_index.accept(self)
+        if isinstance(node.row_index, AST.Number):
+            start_row = row
+            end_row = start_row + 1
+        else:
+            start_row = row[0]
+            end_row = row[-1]
+        if isinstance(node.col_index, AST.Number):
+            start_col = col
+            end_col = start_col + 1
+        else:
+            start_col = col[0]
+            end_col = col[-1]
 
-        return self.memory.get(var)[row][col]
+        matrix = self.memory.get(var)
+        new_matrix = [[matrix[start_row + i][start_col + j] for j in range(end_col-start_col)] for i in range(end_row-start_row)]
+        
+        return new_matrix
     
     @when(AST.VectorRef)
     def visit(self, node):
         var = node.id.name
         index = node.index.accept(self)
+        if isinstance(node.index, AST.Number):
+            start_index = index
+            end_index = index + 1
+        else:
+            start_index = index[0]
+            end_index = index[-1]
 
-        return self.memory.get(var)[index]
+        vector = self.memory.get(var)
+        new_vector = [vector[start_index + i] for i in range(end_index - start_index)]
+
+        return new_vector
+    
+    @when(AST.Uminus)
+    def visit(self, node):
+        return -node.right.accept(self)

@@ -29,7 +29,7 @@ class Mparser(Parser):
 
     @_('instructions_opt')
     def program(self, p):
-        return p[0]
+        return AST.Program(p[0])
 
     @_('instructions')
     def instructions_opt(self, p):
@@ -212,13 +212,11 @@ class Mparser(Parser):
     def assign_op(self,p):
         return p[0]
 
-    @_('expr "," to_print', 
-       'string "," to_print') 
+    @_('expr "," to_print') 
     def to_print(self, p):
         return AST.ToPrint([p[0]] + p[2].values, line=p.lineno)
     
-    @_('string',
-       'expr')
+    @_('expr')
     def to_print(self, p):
         return AST.ToPrint([p[0]], line=p.lineno)
     
@@ -235,6 +233,7 @@ class Mparser(Parser):
        'matrix_function',
        'matrix_ref',
        'vector_ref',
-       'number')
+       'number',
+       'string')
     def expr(self, p):
         return p[0]

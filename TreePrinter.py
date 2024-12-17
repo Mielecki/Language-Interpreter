@@ -20,6 +20,10 @@ class TreePrinter:
     def printTree(self, indent=0):
         pass
 
+    @addToClass(AST.Program)
+    def printTree(self, indent=0):
+        self.code.printTree(indent)
+
     @addToClass(AST.BinExpr)
     def printTree(self, indent=0):
         print(TreePrinter.indent(indent) + self.op)

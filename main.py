@@ -22,14 +22,13 @@ if __name__ == '__main__':
 
     ast = parser.parse(lexer.tokenize(text))
     if parser.valid and ast is not None:
-        ast.printTree()
+        # ast.printTree()
         # Below code shows how to use visitor
         typeChecker = TypeChecker()   
         typeChecker.visit(ast)
-        i = Interpreter()
-        try:
+        if typeChecker.valid:
+
+            i = Interpreter()
             ast.accept(i)
-        except ReturnValueException as e:
-            print("Return value:", e.value)
         
         # print(i.memory.stack[0].memory)
