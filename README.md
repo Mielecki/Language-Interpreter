@@ -4,3 +4,4 @@
 * lab 2: Analizator składniowy (`parser.py`)
 * lab 3: Drzewo składni (`parser.py`, `AST.py`, `TreePrinter.py`)
 * lab 4: Analiza semantyczna (`SymbolTable.py`, `TypeChecker.py`)
+* lab 5: Interpreter (`Memory.py`, `Interpreter.py`, `Exceptions.py`, `visit.py`)
