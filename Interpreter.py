@@ -5,7 +5,44 @@ from Exceptions import  *
 from visit import *
 import sys
 
-# not all possible combinations were considered (e.g., matrix .+ vector, matrix .+ int)
+def dot_add(x, y):
+    a, b = x, y
+
+    # check if x is a vector or a matrix 
+    if type(x[0]) == int:
+        a = [[x[i] for i in range(len(x))]]
+    if type(y[0]) == int:
+        b = [[y[i] for i in range(len(y))]]
+
+    return [[a[i][j] + (b[i][j] if i < len(b) else 0) for j in range(len(a[0]))] for i in range(len(a))]
+
+def dot_mul(x, y):
+    a, b = x, y
+    if type(x[0]) == int:
+        a = [[x[i] for i in range(len(x))]]
+    if type(y[0]) == int:
+        b = [[y[i] for i in range(len(y))]]
+
+    return [[a[i][j] * (b[i][j] if i < len(b) else 1)  for j in range(len(a[0]))] for i in range(len(a))]
+
+def dot_sub(x, y):
+    a, b = x, y
+    if type(x[0]) == int:
+        a = [[x[i] for i in range(len(x))]]
+    if type(y[0]) == int:
+        b = [[y[i] for i in range(len(y))]]
+
+    return [[a[i][j] - (b[i][j] if i < len(b) else 0) for j in range(len(a[0]))] for i in range(len(a))]
+
+def dot_div(x, y):
+    a, b = x, y
+    if type(x[0]) == int:
+        a = [[x[i] for i in range(len(x))]]
+    if type(y[0]) == int:
+        b = [[y[i] for i in range(len(y))]]
+
+    return [[a[i][j] / (b[i][j] if i < len(b) else 1) for j in range(len(a[0]))] for i in range(len(a))]
+
 operators = {
     '+': lambda x, y: x + y,
     '-': lambda x, y: x - y,
@@ -17,10 +54,10 @@ operators = {
     '>=': lambda x, y: x >= y,
     '==': lambda x, y: x == y,
     '!=': lambda x, y: x != y,
-    '.+': lambda x, y: [[x[i][j] + y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
-    '.-': lambda x, y: [[x[i][j] - y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
-    '.*': lambda x, y: [[x[i][j] * y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
-    './': lambda x, y: [[x[i][j] / y[i][j] for j in range(len(x[0]))] for i in range(len(x))],
+    '.+': lambda x, y: dot_add(x, y),
+    '.-': lambda x, y: dot_sub(x, y),
+    '.*': lambda x, y: dot_mul(x, y),
+    './': lambda x, y: dot_div(x, y),
     "zeros": lambda x, y: [[0 for _ in range(y)] for _ in range(x)],
     "ones": lambda x, y: [[1 for _ in range(y)] for _ in range(x)],
     "eye": lambda x, y: [[0 if i != j else 1 for j in range(y)] for i in range(x)],
@@ -70,15 +107,15 @@ class Interpreter(object):
             matrix = node.var.id.accept(self)
             row = node.var.row_index.accept(self)
             col = node.var.col_index.accept(self)
-            for i in row[:-1] if isinstance(node.var.row_index, AST.Range) else range(row):
-                for j in col[:-1] if isinstance(node.var.row_index, AST.Range) else range(col):
-                    matrix[i][j] = r1
+            for i in row[:-1] if isinstance(node.var.row_index, AST.Range) else range(1):
+                for j in col[:-1] if isinstance(node.var.col_index, AST.Range) else range(1):
+                    matrix[i if isinstance(node.var.row_index, AST.Range) else row][j if isinstance(node.var.col_index, AST.Range) else col] = r1
             self.memory.set(node.var.id.name, matrix)
         elif isinstance(node.var, AST.VectorRef):
             vector = node.var.id.accept(self)
             index = node.var.index.accept(self)
-            for i in index[:-1] if isinstance(node.var.index, AST.Range) else range(index):
-                    index[i] = r1
+            for i in index[:-1] if isinstance(node.var.index, AST.Range) else range(1):
+                vector[i if isinstance(node.var.index, AST.Range) else index] = r1
             vector[index] = r1
             self.memory.set(node.var.id.name, vector)
 
@@ -113,21 +150,20 @@ class Interpreter(object):
     @when(AST.For)
     def visit(self, node):
         r = node.range.accept(self)
-        self.memory.push(Memory("for"))
-
-        i = node.var.name
-        self.memory.insert(i, r[0])
-        
-        while self.memory.get(i) in r:
-            try:
-                node.instr.accept(self)
-            except BreakException:
-                break
-            except ContinueException:
-                continue
-            finally:
-                self.memory.set(i, self.memory.get(i) + 1)
-        self.memory.pop()
+        if len(r) > 0:
+            self.memory.push(Memory("for"))
+            i = node.var.name
+            self.memory.insert(i, r[0])
+            while self.memory.get(i) in r:
+                try:
+                    node.instr.accept(self)
+                except BreakException:
+                    break
+                except ContinueException:
+                    continue
+                finally:
+                    self.memory.set(i, self.memory.get(i) + 1)
+            self.memory.pop()
 
     @when(AST.Vector)
     def visit(self, node):
