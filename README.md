@@ -1,4 +1,6 @@
-# Teoria kompilacji
+# Language-Interpreter
+
+This project was developed during a Compilation Theory course at AGH UST.
 
 * lab 1: Analizator leksykalny (`scanner.py`) dla prostego języka.
 * lab 2: Analizator składniowy (`parser.py`)
